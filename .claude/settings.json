@@ -1,0 +1,7 @@
+{
+  "model": "claude-opus-4-6",
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
+  },
+  "skipDangerousModePermissionPrompt": true
+}
