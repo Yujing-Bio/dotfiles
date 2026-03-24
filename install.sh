@@ -54,6 +54,15 @@ for skill_dir in "$DOTFILES_DIR"/.claude/skills/*/; do
     echo "  Linked skill: $skill_name"
 done
 
+# --- Install Claude Code plugins ---
+if command -v claude &>/dev/null; then
+    echo "  Installing superpowers plugin..."
+    claude plugins install superpowers@claude-plugins-official 2>/dev/null || true
+    echo "  Superpowers plugin installed"
+else
+    echo "  claude CLI not found — skipping plugin install"
+fi
+
 # --- Summary ---
 echo ""
 echo "Done! Claude Code config installed for $ENV_NAME."
