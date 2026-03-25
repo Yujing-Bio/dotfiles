@@ -54,6 +54,44 @@ for skill_dir in "$DOTFILES_DIR"/.claude/skills/*/; do
     echo "  Linked skill: $skill_name"
 done
 
+# --- Symlink skills into .ona/skills/ for Ona Agent ---
+# Ona Agent reads skills from <project>/.ona/skills/, not ~/.claude/skills/.
+# This makes dotfiles skills available in the Ona Agent chat.
+PROJECT_DIR=""
+if [[ "$ENV_NAME" == "ona" ]]; then
+    # Find the project root: look for the workspace directory with a .git folder
+    for candidate in /workspaces/*/; do
+        if [[ -d "$candidate/.git" ]]; then
+            PROJECT_DIR="$candidate"
+            break
+        fi
+    done
+fi
+
+if [[ -n "$PROJECT_DIR" ]]; then
+    mkdir -p "$PROJECT_DIR/.ona/skills"
+    for skill_dir in "$DOTFILES_DIR"/.claude/skills/*/; do
+        skill_name="$(basename "$skill_dir")"
+        target="$PROJECT_DIR/.ona/skills/$skill_name"
+        if [[ -d "$target" && ! -L "$target" ]]; then
+            rm -rf "$target"
+        fi
+        ln -sfT "$skill_dir" "$target"
+        echo "  Linked Ona skill: $skill_name → $target"
+    done
+    # Exclude .ona/ from git so it's never committed
+    if [[ -d "$PROJECT_DIR/.git" ]]; then
+        EXCLUDE_FILE="$PROJECT_DIR/.git/info/exclude"
+        mkdir -p "$(dirname "$EXCLUDE_FILE")"
+        if ! grep -qxF '.ona/' "$EXCLUDE_FILE" 2>/dev/null; then
+            echo '.ona/' >> "$EXCLUDE_FILE"
+            echo "  Added .ona/ to .git/info/exclude"
+        fi
+    fi
+else
+    echo "  Skipping Ona Agent skills (not in an Ona environment or no project found)"
+fi
+
 # --- Install Claude Code plugins ---
 if command -v claude &>/dev/null; then
     echo "  Installing superpowers plugin..."
